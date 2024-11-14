@@ -251,7 +251,7 @@ def evaluation(model, edge_index, sparse_edge_index, exclude_edge_indices, k, la
 # 设置命令行参数
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='ml-100k')  # 默认数据集
-parser.add_argument('--user_id', type=int, default=196, help='The user ID to generate counterfactual explanations for.')  # 添加指定用户参数
+parser.add_argument('--user_id', type=int, default=16, help='The user ID to generate counterfactual explanations for.')  # 添加指定用户参数
 
 
 # 基于原始GCN模型的设置，不做改变
@@ -306,31 +306,41 @@ print("边索引样例:", edge_index[:, :5])
 num_users, num_movies = len(user_mapping), len(movie_mapping)
 adj = create_full_adj_matrix(edge_index, num_users, num_movies)
 
-# 分割图的边缘使用80/10/10的训练/验证/测试集分割
-num_interactions = edge_index.shape[1]
-all_indices = list(range(num_interactions))
+from sklearn.model_selection import train_test_split
+import torch
+from torch_sparse import SparseTensor
 
-train_indices, test_indices = train_test_split(
-    all_indices, test_size=0.2, random_state=1)
-val_indices, test_indices = train_test_split(
-    test_indices, test_size=0.5, random_state=1)
+# 获取每个用户的交互边缘
+user_edges = {}
+for i in range(num_users):
+    user_edges[i] = torch.nonzero(edge_index[0] == i).squeeze()
 
-train_edge_index = edge_index[:, train_indices]
-val_edge_index = edge_index[:, val_indices]
-test_edge_index = edge_index[:, test_indices]
+# 用于存储训练集和测试集的边缘索引
+train_edge_index = []
+test_edge_index = []
+
+# 按照 80:20 分割每个用户的交互
+for user, edges in user_edges.items():
+    # 80%训练集，20%测试集
+    train_indices, test_indices = train_test_split(edges.tolist(), test_size=0.2, random_state=1)
+
+    # 分配给训练集、测试集
+    train_edge_index.append(edge_index[:, train_indices])
+    test_edge_index.append(edge_index[:, test_indices])
+
+# 合并所有用户的边缘索引
+train_edge_index = torch.cat(train_edge_index, dim=1)
+test_edge_index = torch.cat(test_edge_index, dim=1)
 
 # 将边缘索引转换为稀疏张量
-train_sparse_edge_index = SparseTensor(row=train_edge_index[0], col=train_edge_index[1], sparse_sizes=(
-    num_users + num_movies, num_users + num_movies))
-val_sparse_edge_index = SparseTensor(row=val_edge_index[0], col=val_edge_index[1], sparse_sizes=(
-    num_users + num_movies, num_users + num_movies))
-test_sparse_edge_index = SparseTensor(row=test_edge_index[0], col=test_edge_index[1], sparse_sizes=(
-    num_users + num_movies, num_users + num_movies))
+train_sparse_edge_index = SparseTensor(row=train_edge_index[0], col=train_edge_index[1], sparse_sizes=(num_users + num_movies, num_users + num_movies))
+test_sparse_edge_index = SparseTensor(row=test_edge_index[0], col=test_edge_index[1], sparse_sizes=(num_users + num_movies, num_users + num_movies))
 
-# 仅筛选指定用户的交互边缘
-specified_user_edges = edge_index[:, edge_index[0] == args.user_id]
+# 仅筛选训练集中的指定用户交互边缘
+specified_user_edges = train_edge_index[:, train_edge_index[0] == args.user_id]
 specified_sparse_edge_index = SparseTensor(row=specified_user_edges[0], col=specified_user_edges[1],
                                            sparse_sizes=(num_users + num_movies, num_users + num_movies))
+
 
 
 #  原模型

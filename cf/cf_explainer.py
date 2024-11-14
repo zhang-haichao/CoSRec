@@ -14,7 +14,7 @@ from torch_geometric.utils import to_dense_adj
 
 
 class LightGCN_CF(nn.Module):
-    def __init__(self, model, num_users, num_items, user_idx, adj, lambda_val=5.0, beta=0.1):
+    def __init__(self, model, num_users, num_items, user_idx, adj, lambda_val=100.0, beta=0.1):
         """
         初始化LightGCN_CF模型。
         :param model: 预训练的Light GCN模型。
