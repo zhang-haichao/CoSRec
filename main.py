@@ -1,5 +1,7 @@
 import sys
 import time
+import os
+import json
 # 数学计算和多维数组处理
 import numpy as np
 # 深度学习库
@@ -13,7 +15,7 @@ import matplotlib.pyplot as plt
 from recsys.LightGCN import LightGCN
 from cf.cf_explainer import LightGCN_CF
 # 数据加载和预处理
-from data.DataLoader import DataLoader
+from data.ml_100k import ml_100k_DataLoader
 from utils.utils import normalize_adj, get_neighbourhood, safe_open, bpr_loss, get_user_positive_items, \
     get_topK_recommendations
 # 命令行参数解析
@@ -22,8 +24,6 @@ import argparse
 import pickle
 # 数据集划分
 from sklearn.model_selection import train_test_split
-
-sys.path.append('..')  # 将上级目录添加到系统路径中
 
 
 def load_node_csv_from_df(df, column_name):
@@ -248,128 +248,161 @@ def evaluation(model, edge_index, sparse_edge_index, exclude_edge_indices, k, la
     return loss, recall, precision, ndcg
 
 
-# 设置命令行参数
-parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', default='ml-100k')  # 默认数据集
-parser.add_argument('--user_id', type=int, default=16, help='The user ID to generate counterfactual explanations for.')  # 添加指定用户参数
+sys.path.append('..')  # 将上级目录添加到系统路径中
 
 
-# 基于原始GCN模型的设置，不做改变
-parser.add_argument('--hidden', type=int, default=20, help='Number of hidden units.')  # 隐藏层单元数
-parser.add_argument('--n_layers', type=int, default=3, help='Number of convolutional layers.')  # 卷积层的数量
-parser.add_argument('--dropout', type=float, default=0.0, help='Dropout rate (between 0 and 1)')  # Dropout比率
+def main():
+    # 设置命令行参数
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', default='ml-100k')  # 默认数据集
+    parser.add_argument('--user_id', type=int, default=16,
+                        help='The user ID to generate counterfactual explanations for.')  # 添加指定用户参数
+    parser.add_argument('--rate', type=float, default=0.1, )  # 抛弃率
+    parser.add_argument('--topk', type=int, default=1, )  # 抛弃率
 
-# 对解释器的设置
-parser.add_argument('--seed', type=int, default=42, help='Random seed.')  # 随机种子
-parser.add_argument('--lr', type=float, default=0.1, help='Learning rate for explainer')  # 解释器的学习率
-parser.add_argument('--optimizer', type=str, default="SGD", help='SGD or Adadelta')  # 优化器类型
-parser.add_argument('--n_momentum', type=float, default=0.0, help='Nesterov momentum')  # Nesterov动量
-parser.add_argument('--beta', type=float, default=0.5, help='Tradeoff for dist loss')  # 距离损失的权重
-parser.add_argument('--num_epochs', type=int, default=500, help='Num epochs for explainer')  # 解释器的训练周期
-parser.add_argument('--device', default='cpu', help='CPU or GPU.')  # 计算设备
-args = parser.parse_args()
+    # 基于原始GCN模型的设置，不做改变
+    parser.add_argument('--hidden', type=int, default=20, help='Number of hidden units.')  # 隐藏层单元数
+    parser.add_argument('--n_layers', type=int, default=3, help='Number of convolutional layers.')  # 卷积层的数量
+    parser.add_argument('--dropout', type=float, default=0.0, help='Dropout rate (between 0 and 1)')  # Dropout比率
 
-print(args)
+    # 对解释器的设置
+    parser.add_argument('--seed', type=int, default=42, help='Random seed.')  # 随机种子
+    parser.add_argument('--lr', type=float, default=0.08, help='Learning rate for explainer')  # 解释器的学习率
+    parser.add_argument('--optimizer', type=str, default="SGD", help='SGD or Adadelta')  # 优化器类型
+    parser.add_argument('--n_momentum', type=float, default=0.0, help='Nesterov momentum')  # Nesterov动量
+    parser.add_argument('--beta', type=float, default=0.5, help='Tradeoff for dist loss')  # 距离损失的权重
+    parser.add_argument('--num_epochs', type=int, default=50, help='Num epochs for explainer')  # 解释器的训练周期
+    parser.add_argument('--device', default='cpu', help='CPU or GPU.')  # 计算设备
+    args = parser.parse_args()
 
-# 设置计算设备
-args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-np.random.seed(args.seed)  # 设置NumPy的随机种子
-torch.manual_seed(args.seed)  # 设置PyTorch的随机种子
-torch.autograd.set_detect_anomaly(True)  # 开启异常检测，有助于调试
+    print(args)
 
-# 使用DataLoader类加载数据
-data_loader = DataLoader(dataset_name='ml-100k')
-Origin_data = data_loader.load_data()
-# 验证Origin_data的前几行
-print("原始数据的前几行:\n", Origin_data.head())
+    # 设置计算设备
+    args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    np.random.seed(args.seed)  # 设置NumPy的随机种子
+    torch.manual_seed(args.seed)  # 设置PyTorch的随机种子
+    torch.autograd.set_detect_anomaly(True)  # 开启异常检测，有助于调试
 
-# 使用修改后的函数和DataFrame创建映射
-user_mapping = load_node_csv_from_df(Origin_data, column_name='user_id')
-movie_mapping = load_node_csv_from_df(Origin_data, column_name='item_id')
-# 打印用户映射和电影映射的一小部分，以确保它们已被正确创建
-print("用户映射样例:", dict(list(user_mapping.items())[:5]))
-print("电影映射样例:", dict(list(movie_mapping.items())[:5]))
+    # 使用DataLoader类加载数据
+    data_loader = ml_100k_DataLoader(dataset_name='ml-100k')
+    Origin_data = data_loader.load_data()
+    # 验证Origin_data的前几行
+    print("原始数据的前几行:\n", Origin_data.head())
 
-# 使用修改后的函数和DataFrame创建边缘索引
-edge_index = load_edge_csv_from_df(
-    Origin_data,
-    src_column_name='user_id',
-    src_mapping=user_mapping,
-    dst_column_name='item_id',
-    dst_mapping=movie_mapping,
-    link_column_name='score',
-    rating_threshold=3,
-)
-# 打印边索引的一小部分，以确保它们已被正确加载
-print("边索引样例:", edge_index[:, :5])
-# 创建全图的邻接矩阵
-num_users, num_movies = len(user_mapping), len(movie_mapping)
-adj = create_full_adj_matrix(edge_index, num_users, num_movies)
+    # 使用修改后的函数和DataFrame创建映射
+    user_mapping = load_node_csv_from_df(Origin_data, column_name='user_id')
+    movie_mapping = load_node_csv_from_df(Origin_data, column_name='item_id')
+    # 打印用户映射和电影映射的一小部分，以确保它们已被正确创建
+    print("用户映射样例:", dict(list(user_mapping.items())[:5]))
+    print("电影映射样例:", dict(list(movie_mapping.items())[:5]))
 
-from sklearn.model_selection import train_test_split
-import torch
-from torch_sparse import SparseTensor
+    # 使用修改后的函数和DataFrame创建边缘索引
+    edge_index = load_edge_csv_from_df(
+        Origin_data,
+        src_column_name='user_id',
+        src_mapping=user_mapping,
+        dst_column_name='item_id',
+        dst_mapping=movie_mapping,
+        link_column_name='score',
+        rating_threshold=3,
+    )
+    # 打印边索引的一小部分，以确保它们已被正确加载
+    print("边索引样例:", edge_index[:, :5])
+    # 创建全图的邻接矩阵
+    num_users, num_movies = len(user_mapping), len(movie_mapping)
+    adj = create_full_adj_matrix(edge_index, num_users, num_movies)
 
-# 获取每个用户的交互边缘
-user_edges = {}
-for i in range(num_users):
-    user_edges[i] = torch.nonzero(edge_index[0] == i).squeeze()
+    # 获取每个用户的交互边缘
+    user_edges = {}
+    for i in range(num_users):
+        user_edges[i] = torch.nonzero(edge_index[0] == i).squeeze()
 
-# 用于存储训练集和测试集的边缘索引
-train_edge_index = []
-test_edge_index = []
+    # 用于存储训练集和测试集的边缘索引
+    train_edge_index = []
+    test_edge_index = []
 
-# 按照 80:20 分割每个用户的交互
-for user, edges in user_edges.items():
-    # 80%训练集，20%测试集
-    train_indices, test_indices = train_test_split(edges.tolist(), test_size=0.2, random_state=1)
+    # 按照 80:20 分割每个用户的交互
+    for user, edges in user_edges.items():
+        # 80%训练集，20%测试集
+        train_indices, test_indices = train_test_split(edges.tolist(), test_size=0.2, random_state=1)
 
-    # 分配给训练集、测试集
-    train_edge_index.append(edge_index[:, train_indices])
-    test_edge_index.append(edge_index[:, test_indices])
+        # 分配给训练集、测试集
+        train_edge_index.append(edge_index[:, train_indices])
+        test_edge_index.append(edge_index[:, test_indices])
 
-# 合并所有用户的边缘索引
-train_edge_index = torch.cat(train_edge_index, dim=1)
-test_edge_index = torch.cat(test_edge_index, dim=1)
+    # 合并所有用户的边缘索引
+    train_edge_index = torch.cat(train_edge_index, dim=1)
+    test_edge_index = torch.cat(test_edge_index, dim=1)
 
-# 将边缘索引转换为稀疏张量
-train_sparse_edge_index = SparseTensor(row=train_edge_index[0], col=train_edge_index[1], sparse_sizes=(num_users + num_movies, num_users + num_movies))
-test_sparse_edge_index = SparseTensor(row=test_edge_index[0], col=test_edge_index[1], sparse_sizes=(num_users + num_movies, num_users + num_movies))
-
-# 仅筛选训练集中的指定用户交互边缘
-specified_user_edges = train_edge_index[:, train_edge_index[0] == args.user_id]
-specified_sparse_edge_index = SparseTensor(row=specified_user_edges[0], col=specified_user_edges[1],
+    # 将边缘索引转换为稀疏张量
+    train_sparse_edge_index = SparseTensor(row=train_edge_index[0], col=train_edge_index[1],
                                            sparse_sizes=(num_users + num_movies, num_users + num_movies))
+    test_sparse_edge_index = SparseTensor(row=test_edge_index[0], col=test_edge_index[1],
+                                          sparse_sizes=(num_users + num_movies, num_users + num_movies))
+
+    # 仅筛选训练集中的指定用户交互边缘
+    specified_user_edges = train_edge_index[:, train_edge_index[0] == args.user_id]
+    specified_sparse_edge_index = SparseTensor(row=specified_user_edges[0], col=specified_user_edges[1],
+                                               sparse_sizes=(num_users + num_movies, num_users + num_movies))
+
+    #  原模型
+    rec_model = LightGCN(num_users, num_movies)
+
+    # 对指定用户的每个物品生成反事实解释
+    specified_user_movie_pairs = list(zip(specified_user_edges[0].tolist(), specified_user_edges[1].tolist()))
+
+    # 打印一些用户-物品对以进行验证
+    print(f"指定用户 {args.user_id} 的用户-物品对样例:", specified_user_movie_pairs[:5])
+
+    start = time.time()  # 记录开始时间
+    train_cf_examples = []
+
+    explainer = LightGCN_CF(rec_model, num_users, num_movies, args.user_id, specified_sparse_edge_index, No_x=args.topk,
+                            perd_rate=args.rate)
+
+    cf_example = explainer.explain(cf_optimizer=args.optimizer, lr=args.lr,
+                                   n_momentum=args.n_momentum, num_epochs=args.num_epochs,
+                                   test_edge_index=specified_user_edges,
+                                   exclude_edge_indices=[specified_user_edges])
+    train_cf_examples.append(cf_example)
+    print("Time for {} epochs of one example: {:.4f}min".format(args.num_epochs, (time.time() - start) / 60))
+
+    print(train_cf_examples)
+
+    # 保存反事实解释示例
+    # 首先，创建目录（如果不存在）
+    output_dir = os.path.join('results', args.dataset)
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 构建文件名
+    filename = f"top_{args.topk}_rate{args.rate}_lr{args.lr}_beta{args.beta}_mom{args.n_momentum}_epochs{args.num_epochs}_seed{args.seed}.json"
+    file_path = os.path.join(output_dir, filename)
+
+    # 检查文件是否存在
+    if os.path.exists(file_path):
+        # 如果文件存在，加载已有的数据
+        with open(file_path, 'r') as f:
+            existing_data = json.load(f)
+    else:
+        existing_data = {}
+
+    # 确保 existing_data 是一个字典
+    if not isinstance(existing_data, dict):
+        existing_data = {}
+
+    # 假设 train_cf_examples 是一个列表，每个元素是 [user_idx, user_hist_count, rate, original_recommendations_list, perturbed_recommendations_list]
+
+    # 更新 existing_data
+    for cf_example in train_cf_examples:
+        user_idx = cf_example[0]
+        existing_data[str(user_idx)] = cf_example[1:]  # 将其余的数据保存为值
+
+    # 将更新后的数据保存回文件
+    with open(file_path, 'w') as f:
+        json.dump(existing_data, f, ensure_ascii=False, indent=4)
+
+    print(f"反事实解释示例已保存到 {file_path}")
 
 
-
-#  原模型
-rec_model = LightGCN(num_users, num_movies)
-
-# 对指定用户的每个物品生成反事实解释
-specified_user_movie_pairs = list(zip(specified_user_edges[0].tolist(), specified_user_edges[1].tolist()))
-
-# 打印一些用户-物品对以进行验证
-print(f"指定用户 {args.user_id} 的用户-物品对样例:", specified_user_movie_pairs[:5])
-
-start = time.time()  # 记录开始时间
-train_cf_examples = []
-
-explainer = LightGCN_CF(rec_model, num_users, num_movies, args.user_id, specified_sparse_edge_index)
-
-cf_example = explainer.explain(cf_optimizer=args.optimizer, lr=args.lr,
-                               n_momentum=args.n_momentum, num_epochs=args.num_epochs,
-                               test_edge_index=specified_user_edges,
-                               exclude_edge_indices=[specified_user_edges])
-train_cf_examples.append(cf_example)
-print("Time for {} epochs of one example: {:.4f}min".format(args.num_epochs, (time.time() - start) / 60))
-
-print("Total time elapsed: {:.4f}s".format((time.time() - start) / 60))
-print(f"Number of CF examples found for user {args.user_id}: {len(train_cf_examples)}")
-
-print(train_cf_examples)
-
-# 保存指定用户的反事实解释示例
-with safe_open(f"results/{args.dataset}/{args.user_id}_cf_examples_lr{args.lr}_beta{args.beta}_mom{args.n_momentum}_epochs{args.num_epochs}_seed{args.seed}",
-               "wb") as f:
-    pickle.dump(train_cf_examples, f)
+if __name__ == '__main__':
+    main()

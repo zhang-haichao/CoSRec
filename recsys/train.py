@@ -5,7 +5,7 @@ import torch  # PyTorch深度学习框架，用于建立和训练模型
 from torch import nn, optim, Tensor  # nn: 网络层; optim: 优化器; Tensor: 张量
 from torch_sparse import SparseTensor, matmul  # 处理稀疏张量的操作，例如矩阵乘法
 from torch_geometric.utils import structured_negative_sampling  # 结构化负采样，用于图数据
-from data.DataLoader import DataLoader  # 自定义数据加载器
+from data.ml_100k import ml_100k_DataLoader  # 自定义数据加载器
 from LightGCN import LightGCN
 from utils.utils import bpr_loss
 
@@ -209,7 +209,7 @@ def evaluation(model, edge_index, sparse_edge_index, exclude_edge_indices, k, la
 
 
 # 使用DataLoader类加载数据
-data_loader = DataLoader(dataset_name='ml-100k')
+data_loader = ml_100k_DataLoader(dataset_name='ml-100k')
 Origin_data = data_loader.load_data()
 # 验证Origin_data的前几行
 print("原始数据的前几行:\n", Origin_data.head())

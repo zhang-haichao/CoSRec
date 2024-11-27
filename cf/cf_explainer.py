@@ -14,7 +14,7 @@ from torch_geometric.utils import to_dense_adj
 
 
 class LightGCN_CF(nn.Module):
-    def __init__(self, model, num_users, num_items, user_idx, adj, lambda_val=100.0, beta=0.1):
+    def __init__(self, model, num_users, num_items, user_idx, adj, perd_rate, No_x, lambda_val=10.0, beta=0.1):
         """
         初始化LightGCN_CF模型。
         :param model: 预训练的Light GCN模型。
@@ -30,6 +30,11 @@ class LightGCN_CF(nn.Module):
         self.adj = adj  # 邻接矩阵
         # 设置需要解释的节点索引
         self.user_idx = user_idx
+
+        # 解释数量
+        self.rate = perd_rate
+        # 解释前几个
+        self.No_x = No_x
 
         # 计算self.user_idx用户的历史交互数
         row, col, value = self.adj.coo()
@@ -89,7 +94,67 @@ class LightGCN_CF(nn.Module):
 
         # 打印找到的反事实示例的数量和目标节点索引
         print("{} CF examples for user_idx = {}".format(num_cf_examples, self.user_idx))
-        return best_cf_example  # 返回最佳反事实示例
+        print(self.user_idx, self.user_hist_count, self.cf_model.P_vec)
+
+        # 获取原始推荐和扰动推荐
+        # 获取原始推荐和扰动推荐
+
+        # Convert adj to COO format
+        row, col, value = self.adj.coo()
+
+        # For the original recommendation, create an adjacency matrix with all ones
+        adj_values_original = torch.ones(len(row))
+        adj_original = SparseTensor(row=row, col=col, value=adj_values_original, sparse_sizes=self.adj.sparse_sizes())
+
+        # For the perturbed recommendation
+        P_vec = self.cf_model.P_vec.detach()  # Detach to avoid gradient computation
+
+        # Set the smallest 10% of P_vec to zero, others to one
+        num_edges = P_vec.numel()
+        num_zero = int(self.rate * num_edges)
+        sorted_P_vec, indices = torch.sort(P_vec)
+        smallest_indices = indices[:num_zero]
+
+        perturbed_P_vec = torch.ones_like(P_vec)
+        perturbed_P_vec[smallest_indices] = 0.0
+
+        # Multiply adj values by perturbed_P_vec
+        perturbed_values = 1 * perturbed_P_vec
+
+        adj_perturbed = SparseTensor(row=row, col=col, value=perturbed_values, sparse_sizes=self.adj.sparse_sizes())
+
+        # Use the model to compute recommendations
+
+        # Compute embeddings and ratings with original adj
+        users_emb_original, _, items_emb_original, _ = self.model.forward(adj_original)
+        rating_original = torch.matmul(users_emb_original, items_emb_original.T)
+
+        # Compute embeddings and ratings with perturbed adj
+        users_emb_perturbed, _, items_emb_perturbed, _ = self.model.forward(adj_perturbed)
+        rating_perturbed = torch.matmul(users_emb_perturbed, items_emb_perturbed.T)
+
+        # Get top-K recommendations
+        top_k = 10  # You can adjust this value as needed
+
+        top_k_indices_original = get_topK_recommendations(rating_original, top_k, test_edge_index, exclude_edge_indices)
+        top_k_indices_perturbed = get_topK_recommendations(rating_perturbed, top_k, test_edge_index,
+                                                           exclude_edge_indices)
+
+        # For the user of interest
+        original_recommendations = torch.tensor(top_k_indices_original[self.user_idx])
+        perturbed_recommendations = torch.tensor(top_k_indices_perturbed[self.user_idx])
+
+        # Print the recommendations
+        print(f'Final Original recommendations for user {self.user_idx}: {original_recommendations}')
+        print(f'Final Perturbed recommendations for user {self.user_idx}: {perturbed_recommendations}')
+
+        # Ensure the recommendations are converted to Python lists
+        original_recommendations_list = original_recommendations.tolist()
+        perturbed_recommendations_list = perturbed_recommendations.tolist()
+
+        # 返回最佳反事实示例
+        return [self.user_idx, self.user_hist_count, self.rate, original_recommendations_list,
+                perturbed_recommendations_list]
 
     def train1(self, epoch, test_edge_index, exclude_edge_indices):
         # 训练过程
@@ -122,14 +187,17 @@ class LightGCN_CF(nn.Module):
         squared_differences = (self.cf_model.P_vec - ones_vec) ** 2
         loss_graph_dist = torch.mean(squared_differences)
 
-        # 获取原始推荐前3项物品在扰动后推荐得分
-        top_k_original = 3
+        # L1 正则化项
+        l1_loss = torch.linalg.norm(self.cf_model.P_vec,ord=1)
+
+        # 获取原始推荐前X项物品在扰动后推荐得分
+        top_k_original = self.No_x # 135
         original_topk_items = original_recommendations[:top_k_original]
         perturbed_scores = rating[self.user_idx, original_topk_items]
         loss_decrease_original_items = torch.mean(perturbed_scores)
 
         # 总损失函数
-        total_loss = self.lambda_val *loss_graph_dist + self.beta * loss_decrease_original_items
+        total_loss = self.lambda_val *loss_graph_dist + self.beta * loss_decrease_original_items+0.0002 * l1_loss
 
         total_loss.backward()
         clip_grad_norm_(self.cf_model.parameters(), 2.0)
@@ -147,7 +215,7 @@ class LightGCN_CF(nn.Module):
 
         # 打印训练信息
         print(
-            f'Epoch: {epoch + 1}, Total Loss: {total_loss.item():.4f}, Graph Loss: {loss_graph_dist.item():.4f}, Decrease Original Items Loss: {loss_decrease_original_items.item():.4f}')
+            f'Epoch: {epoch + 1}, Total Loss: {total_loss.item():.4f},L1 Loss:{l1_loss.item():.4f}, Graph Loss: {loss_graph_dist.item():.4f}, Decrease Original Items Loss: {loss_decrease_original_items.item():.4f}')
         print(self.cf_model.P_vec)
         print(f'Original recommendations for user {self.user_idx}: {original_recommendations}')
         print(f'Perturbed recommendations for user {self.user_idx}: {perturbed_recommendations}')

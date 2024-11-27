@@ -54,10 +54,22 @@ class LightGCN(MessagePassing):
         row1 = torch.cat([row,col], dim=0)
         col1 = torch.cat([col,row], dim=0)
 
-        bidirectional_edge_index = SparseTensor(row=row1, col=col1, sparse_sizes=edge_index.sparse_sizes())
+        if value is None:
+            value = (torch.ones(len(row)))
 
-        # 对邻接矩阵进行GCN标准化处理
-        edge_index_norm = gcn_norm(bidirectional_edge_index, add_self_loops=self.add_self_loops)
+        row1 = torch.cat([row,col], dim=0)
+        col1 = torch.cat([col,row], dim=0)
+        value1 = torch.cat([value,value], dim=0)
+
+        bidirectional_edge_index = SparseTensor(row=row1, col=col1, value=value1, sparse_sizes=edge_index.sparse_sizes())
+
+        # 对邻接矩阵进行GCN标准化处理，传递edge_weight参数
+        edge_index_norm = gcn_norm(
+            bidirectional_edge_index,
+            edge_weight=bidirectional_edge_index.storage.value(),
+            add_self_loops=self.add_self_loops
+        )
+
 
         # 初始用户和物品的嵌入拼接起来，形成初始嵌入矩阵 E^0
         emb_0 = torch.cat([self.users_emb.weight, self.items_emb.weight])
