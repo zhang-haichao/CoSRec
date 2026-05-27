@@ -1,3 +1,8 @@
+import sys
+import os
+# 添加项目根目录到Python路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np  # 处理多维数组和进行数学计算
 import matplotlib.pyplot as plt  # 绘制图表，用于数据可视化
 from sklearn.model_selection import train_test_split  # 划分数据集为训练集和测试集

@@ -1,0 +1,128 @@
+{
+  "196": {
+    "user_id": 196,
+    "mapped_user_id": 0,
+    "user_history_count": 27,
+    "top_k_recommendations": [
+      274,
+      248,
+      366
+    ],
+    "user_history_sample": [
+      {
+        "index": 0,
+        "user_id": 196,
+        "item_id": 285,
+        "mapped_item_id": 512
+      },
+      {
+        "index": 1,
+        "user_id": 196,
+        "item_id": 382,
+        "mapped_item_id": 92
+      },
+      {
+        "index": 2,
+        "user_id": 196,
+        "item_id": 762,
+        "mapped_item_id": 365
+      },
+      {
+        "index": 3,
+        "user_id": 196,
+        "item_id": 70,
+        "mapped_item_id": 423
+      },
+      {
+        "index": 4,
+        "user_id": 196,
+        "item_id": 287,
+        "mapped_item_id": 487
+      }
+    ]
+  },
+  "186": {
+    "user_id": 186,
+    "mapped_user_id": 1,
+    "user_history_count": 57,
+    "top_k_recommendations": [
+      274,
+      248,
+      366
+    ],
+    "user_history_sample": [
+      {
+        "index": 0,
+        "user_id": 186,
+        "item_id": 306,
+        "mapped_item_id": 380
+      },
+      {
+        "index": 1,
+        "user_id": 186,
+        "item_id": 550,
+        "mapped_item_id": 368
+      },
+      {
+        "index": 2,
+        "user_id": 186,
+        "item_id": 477,
+        "mapped_item_id": 530
+      },
+      {
+        "index": 3,
+        "user_id": 186,
+        "item_id": 596,
+        "mapped_item_id": 340
+      },
+      {
+        "index": 4,
+        "user_id": 186,
+        "item_id": 1042,
+        "mapped_item_id": 18
+      }
+    ]
+  },
+  "22": {
+    "user_id": 22,
+    "mapped_user_id": 2,
+    "user_history_count": 76,
+    "top_k_recommendations": [
+      274,
+      248,
+      366
+    ],
+    "user_history_sample": [
+      {
+        "index": 0,
+        "user_id": 22,
+        "item_id": 194,
+        "mapped_item_id": 34
+      },
+      {
+        "index": 1,
+        "user_id": 22,
+        "item_id": 216,
+        "mapped_item_id": 166
+      },
+      {
+        "index": 2,
+        "user_id": 22,
+        "item_id": 712,
+        "mapped_item_id": 362
+      },
+      {
+        "index": 3,
+        "user_id": 22,
+        "item_id": 121,
+        "mapped_item_id": 403
+      },
+      {
+        "index": 4,
+        "user_id": 22,
+        "item_id": 731,
+        "mapped_item_id": 308
+      }
+    ]
+  }
+}

@@ -14,12 +14,18 @@ from torch_geometric.utils import to_dense_adj
 
 
 class LightGCN_CF(nn.Module):
-    def __init__(self, model, num_users, num_items, user_idx, adj, perd_rate, No_x, lambda_val=10.0, beta=0.1):
+    def __init__(self, model, num_users, num_items, user_idx, adj, perd_rate, target_index, lambda_val=10.0, beta=0.1):
         """
         初始化LightGCN_CF模型。
         :param model: 预训练的Light GCN模型。
         :param num_users: 用户数量。
         :param num_items: 物品数量。
+        :param user_idx: 目标用户索引。
+        :param adj: 邻接矩阵。
+        :param perd_rate: 抛弃率（移除交互的比例）。
+        :param target_index: 目标推荐物品的索引（从0开始）。
+        :param lambda_val: 图距离损失的权重。
+        :param beta: 推荐变化损失的权重。
         """
         super(LightGCN_CF, self).__init__()
         self.model = model  # 预训练的Light GCN模型
@@ -33,8 +39,8 @@ class LightGCN_CF(nn.Module):
 
         # 解释数量
         self.rate = perd_rate
-        # 解释前几个
-        self.No_x = No_x
+        # 解释第几个推荐物品
+        self.target_index = target_index
 
         # 计算self.user_idx用户的历史交互数
         row, col, value = self.adj.coo()
@@ -190,14 +196,20 @@ class LightGCN_CF(nn.Module):
         # L1 正则化项
         l1_loss = torch.linalg.norm(self.cf_model.P_vec,ord=1)
 
-        # 获取原始推荐前X项物品在扰动后推荐得分
-        top_k_original = self.No_x # 135
-        original_topk_items = original_recommendations[:top_k_original]
-        perturbed_scores = rating[self.user_idx, original_topk_items]
-        loss_decrease_original_items = torch.mean(perturbed_scores)
+        # 修改这里：只关注第target_index个推荐物品的变化
+        # 确保target_index在有效范围内
+        if self.target_index < len(original_recommendations):
+            target_item = original_recommendations[self.target_index]
+            perturbed_score = rating[self.user_idx, target_item]
+            loss_decrease_target_item = perturbed_score
+        else:
+            # 如果target_index超出范围，使用最后一个物品
+            target_item = original_recommendations[-1]
+            perturbed_score = rating[self.user_idx, target_item]
+            loss_decrease_target_item = perturbed_score
 
         # 总损失函数
-        total_loss = self.lambda_val *loss_graph_dist + self.beta * loss_decrease_original_items+0.0002 * l1_loss
+        total_loss = self.lambda_val *loss_graph_dist + self.beta * loss_decrease_target_item+0.0002 * l1_loss
 
         total_loss.backward()
         clip_grad_norm_(self.cf_model.parameters(), 2.0)
@@ -215,15 +227,15 @@ class LightGCN_CF(nn.Module):
 
         # 打印训练信息
         print(
-            f'Epoch: {epoch + 1}, Total Loss: {total_loss.item():.4f},L1 Loss:{l1_loss.item():.4f}, Graph Loss: {loss_graph_dist.item():.4f}, Decrease Original Items Loss: {loss_decrease_original_items.item():.4f}')
+            f'Epoch: {epoch + 1}, Total Loss: {total_loss.item():.4f},L1 Loss:{l1_loss.item():.4f}, Graph Loss: {loss_graph_dist.item():.4f}, Decrease Target Item Loss: {loss_decrease_target_item.item():.4f}')
         print(self.cf_model.P_vec)
         print(f'Original recommendations for user {self.user_idx}: {original_recommendations}')
         print(f'Perturbed recommendations for user {self.user_idx}: {perturbed_recommendations}')
         print(" ")
 
         cf_stats = []
-        if any([loss_graph_dist, loss_decrease_original_items]):
+        if any([loss_graph_dist, loss_decrease_target_item]):
             cf_stats = [self.user_idx, total_loss.item(), loss_graph_dist.item(),
-                        loss_decrease_original_items.item()]
+                        loss_decrease_target_item.item()]
 
         return cf_stats, total_loss.item()

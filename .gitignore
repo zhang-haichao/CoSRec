@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+
+# Local system files
+.DS_Store
+
+# Experiment byproducts
+log_tensorboard/
+

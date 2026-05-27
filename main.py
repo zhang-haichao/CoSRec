@@ -1,6 +1,9 @@
 import sys
-import time
 import os
+# 添加项目根目录到Python路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import time
 import json
 # 数学计算和多维数组处理
 import numpy as np
@@ -248,17 +251,14 @@ def evaluation(model, edge_index, sparse_edge_index, exclude_edge_indices, k, la
     return loss, recall, precision, ndcg
 
 
-sys.path.append('..')  # 将上级目录添加到系统路径中
-
-
 def main():
     # 设置命令行参数
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', default='ml-100k')  # 默认数据集
-    parser.add_argument('--user_id', type=int, default=16,
+    parser.add_argument('--user_id', type=int, default=196,
                         help='The user ID to generate counterfactual explanations for.')  # 添加指定用户参数
-    parser.add_argument('--rate', type=float, default=0.1, )  # 抛弃率
-    parser.add_argument('--topk', type=int, default=1, )  # 抛弃率
+    parser.add_argument('--rate', type=float, default=0.2, )  # 抛弃率
+    parser.add_argument('--target_index', type=int, default=2, help='The index of recommendation to explain (0-based).')  # 修改参数名称和说明
 
     # 基于原始GCN模型的设置，不做改变
     parser.add_argument('--hidden', type=int, default=20, help='Number of hidden units.')  # 隐藏层单元数
@@ -288,13 +288,29 @@ def main():
     Origin_data = data_loader.load_data()
     # 验证Origin_data的前几行
     print("原始数据的前几行:\n", Origin_data.head())
+    
+    # 查找原始数据中用户196的所有交互
+    user_196_data = Origin_data[Origin_data['user_id'] == 196]
+    print(f"原始数据中用户196的交互记录:\n{user_196_data.head(100)}")
 
     # 使用修改后的函数和DataFrame创建映射
     user_mapping = load_node_csv_from_df(Origin_data, column_name='user_id')
     movie_mapping = load_node_csv_from_df(Origin_data, column_name='item_id')
+    # 创建反向映射，用于将连续ID映射回原始ID
+    user_reverse_mapping = {v: k for k, v in user_mapping.items()}
+    movie_reverse_mapping = {v: k for k, v in movie_mapping.items()}
+    
     # 打印用户映射和电影映射的一小部分，以确保它们已被正确创建
     print("用户映射样例:", dict(list(user_mapping.items())[:5]))
     print("电影映射样例:", dict(list(movie_mapping.items())[:5]))
+    
+    # 检查原始用户ID 196 是否在映射中
+    if 196 in user_mapping:
+        mapped_user_id = user_mapping[196]
+        print(f"原始用户ID 196 映射为连续ID {mapped_user_id}")
+    else:
+        print("原始用户ID 196 不在数据集中")
+        return
 
     # 使用修改后的函数和DataFrame创建边缘索引
     edge_index = load_edge_csv_from_df(
@@ -307,7 +323,8 @@ def main():
         rating_threshold=3,
     )
     # 打印边索引的一小部分，以确保它们已被正确加载
-    print("边索引样例:", edge_index[:, :5])
+    print("完整边索引样例:", edge_index[:, :10])
+    
     # 创建全图的邻接矩阵
     num_users, num_movies = len(user_mapping), len(movie_mapping)
     adj = create_full_adj_matrix(edge_index, num_users, num_movies)
@@ -340,8 +357,14 @@ def main():
     test_sparse_edge_index = SparseTensor(row=test_edge_index[0], col=test_edge_index[1],
                                           sparse_sizes=(num_users + num_movies, num_users + num_movies))
 
+    # 获取映射后的用户ID
+    mapped_user_id = user_mapping.get(args.user_id, None)
+    if mapped_user_id is None:
+        print(f"用户ID {args.user_id} 不在数据集中")
+        return
+    
     # 仅筛选训练集中的指定用户交互边缘
-    specified_user_edges = train_edge_index[:, train_edge_index[0] == args.user_id]
+    specified_user_edges = train_edge_index[:, train_edge_index[0] == mapped_user_id]
     specified_sparse_edge_index = SparseTensor(row=specified_user_edges[0], col=specified_user_edges[1],
                                                sparse_sizes=(num_users + num_movies, num_users + num_movies))
 
@@ -352,12 +375,19 @@ def main():
     specified_user_movie_pairs = list(zip(specified_user_edges[0].tolist(), specified_user_edges[1].tolist()))
 
     # 打印一些用户-物品对以进行验证
-    print(f"指定用户 {args.user_id} 的用户-物品对样例:", specified_user_movie_pairs[:5])
+    print(f"指定用户 {args.user_id} (映射后ID: {mapped_user_id}) 的用户-物品对数量: {len(specified_user_movie_pairs)}")
+    print(f"指定用户 {args.user_id} (映射后ID: {mapped_user_id}) 的前10个用户-物品对样例: {specified_user_movie_pairs[:10]}")
+
+    # 如果没有足够的交互数据，退出程序
+    if len(specified_user_movie_pairs) == 0:
+        print(f"用户 {args.user_id} 在训练集中没有交互数据")
+        return
 
     start = time.time()  # 记录开始时间
     train_cf_examples = []
 
-    explainer = LightGCN_CF(rec_model, num_users, num_movies, args.user_id, specified_sparse_edge_index, No_x=args.topk,
+    # 修改这里：将topk参数改为target_index参数
+    explainer = LightGCN_CF(rec_model, num_users, num_movies, mapped_user_id, specified_sparse_edge_index, target_index=args.target_index,
                             perd_rate=args.rate)
 
     cf_example = explainer.explain(cf_optimizer=args.optimizer, lr=args.lr,
@@ -375,7 +405,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     # 构建文件名
-    filename = f"top_{args.topk}_rate{args.rate}_lr{args.lr}_beta{args.beta}_mom{args.n_momentum}_epochs{args.num_epochs}_seed{args.seed}.json"
+    filename = f"target_{args.target_index}_rate{args.rate}_lr{args.lr}_beta{args.beta}_mom{args.n_momentum}_epochs{args.num_epochs}_seed{args.seed}.json"
     file_path = os.path.join(output_dir, filename)
 
     # 检查文件是否存在
@@ -395,7 +425,9 @@ def main():
     # 更新 existing_data
     for cf_example in train_cf_examples:
         user_idx = cf_example[0]
-        existing_data[str(user_idx)] = cf_example[1:]  # 将其余的数据保存为值
+        # 使用原始用户ID作为键
+        original_user_id = user_reverse_mapping[user_idx]
+        existing_data[str(original_user_id)] = cf_example[1:]  # 将其余的数据保存为值
 
     # 将更新后的数据保存回文件
     with open(file_path, 'w') as f:
