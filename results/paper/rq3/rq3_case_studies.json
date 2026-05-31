@@ -1,0 +1,80 @@
+[
+  {
+    "case_id": 1,
+    "user_id": 53,
+    "history_count": 20,
+    "window_ranks": [5, 6, 7],
+    "original_recommendation_list": [
+      "Chasing Amy (1997)",
+      "Bio-Dome (1996)",
+      "African Queen, The (1951)"
+    ],
+    "recommendation_list_after_removal": [
+      "Chasing Amy (1997)",
+      "Bio-Dome (1996)",
+      "French Twist (Gazon maudit) (1995)"
+    ],
+    "changed_item": {
+      "original": "African Queen, The (1951)",
+      "after_removal": "French Twist (Gazon maudit) (1995)"
+    },
+    "counterfactual_support_set": [
+      {"title": "White Squall (1996)", "contribution": 0.9900},
+      {"title": "Rumble in the Bronx (1995)", "contribution": 0.3981},
+      {"title": "Bridge on the River Kwai, The (1957)", "contribution": 0.3955}
+    ],
+    "background_story": "Action/adventure-like history supports a classic adventure-romance recommendation; removing it shifts the slot to a lighter comedy-romance."
+  },
+  {
+    "case_id": 2,
+    "user_id": 131,
+    "history_count": 22,
+    "window_ranks": [2, 3, 4],
+    "original_recommendation_list": [
+      "Dangerous Minds (1995)",
+      "Chasing Amy (1997)",
+      "Bio-Dome (1996)"
+    ],
+    "recommendation_list_after_removal": [
+      "Dangerous Minds (1995)",
+      "Chasing Amy (1997)",
+      "African Queen, The (1951)"
+    ],
+    "changed_item": {
+      "original": "Bio-Dome (1996)",
+      "after_removal": "African Queen, The (1951)"
+    },
+    "counterfactual_support_set": [
+      {"title": "Antonia's Line (1995)", "contribution": 0.9900},
+      {"title": "Ulee's Gold (1997)", "contribution": 0.4166},
+      {"title": "Celluloid Closet, The (1995)", "contribution": 0.3854}
+    ],
+    "background_story": "The top two recommendations remain stable, while removing art-house/drama support changes the third slot from broad comedy to a classic adventure-romance."
+  },
+  {
+    "case_id": 3,
+    "user_id": 338,
+    "history_count": 56,
+    "window_ranks": [8, 9, 10],
+    "original_recommendation_list": [
+      "Unhook the Stars (1996)",
+      "Postino, Il (1994)",
+      "Die Hard (1988)"
+    ],
+    "recommendation_list_after_removal": [
+      "Unhook the Stars (1996)",
+      "Postino, Il (1994)",
+      "Bean (1997)"
+    ],
+    "changed_item": {
+      "original": "Die Hard (1988)",
+      "after_removal": "Bean (1997)"
+    },
+    "counterfactual_support_set": [
+      {"title": "Young Frankenstein (1974)", "contribution": 0.9900},
+      {"title": "Full Monty, The (1997)", "contribution": 0.9900},
+      {"title": "Manhattan (1979)", "contribution": 0.9900}
+    ],
+    "background_story": "The first two drama/romance recommendations remain stable, while the final slot changes from the action-thriller series film Die Hard to the comedy franchise film Bean."
+  }
+]

@@ -1,0 +1,8 @@
+lambda,status,Success@1,Success@5,Stability@10,Avg_Removed_Edges,num_users,budget_percent,cosrec_epochs,cosrec_lr,beta,objective,graph_scope,embedding_readout,selection_mode,output_dir,error
+0.01,ok,28.0,2.0,0.9229999999999999,6.5,100,0.1,10,0.2,5.0,boundary_margin,full,all_layers,adaptive_expected,results/paper/rq4/lambda_runs/lambda_0p01,
+0.1,ok,28.0,2.0,0.9229999999999999,6.5,100,0.1,10,0.2,5.0,boundary_margin,full,all_layers,adaptive_expected,results/paper/rq4/lambda_runs/lambda_0p1,
+1.0,ok,27.0,2.0,0.9239999999999999,6.49,100,0.1,10,0.2,5.0,boundary_margin,full,all_layers,adaptive_expected,results/paper/rq4/lambda_runs/lambda_1,
+10.0,ok,26.0,2.0,0.927,5.94,100,0.1,10,0.2,5.0,boundary_margin,full,all_layers,adaptive_expected,results/paper/rq4/lambda_runs/lambda_10,
+30.0,ok,18.0,1.0,0.9509999999999998,3.83,100,0.1,10,0.2,5.0,boundary_margin,full,all_layers,adaptive_expected,results/paper/rq4/lambda_runs/lambda_30,
+100.0,ok,7.0,1.0,0.9829999999999999,1.45,100,0.1,10,0.2,5.0,boundary_margin,full,all_layers,adaptive_expected,results/paper/rq4/lambda_runs/lambda_100,
+300.0,ok,3.0,0.0,0.996,0.4,100,0.1,10,0.2,5.0,boundary_margin,full,all_layers,adaptive_expected,results/paper/rq4/lambda_runs/lambda_300,
