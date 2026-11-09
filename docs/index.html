@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Explaining Graph Recommendations via Counterfactual Support Sets | ICONIP 2026</title>
+    <meta
+      name="description"
+      content="CoSRec explains graph recommendations with small, verifiable counterfactual support sets while keeping the trained recommender fixed.">
+    <meta
+      name="keywords"
+      content="counterfactual explanation, graph recommendation, explainable recommendation, CoSRec, LightGCN">
+    <meta name="author" content="Haichao Zhang, Chong Zhang, Can Wang, Shi Qiu, Jia Wang">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="canonical" href="https://zhang-haichao.github.io/CoSRec/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet">
+    <link rel="stylesheet" href="./static/css/site.css">
+
+    <meta name="citation_title" content="Explaining Graph Recommendations via Counterfactual Support Sets">
+    <meta name="citation_author" content="Zhang, Haichao">
+    <meta name="citation_author" content="Zhang, Chong">
+    <meta name="citation_author" content="Wang, Can">
+    <meta name="citation_author" content="Qiu, Shi">
+    <meta name="citation_author" content="Wang, Jia">
+    <meta name="citation_conference_title" content="International Conference on Neural Information Processing">
+    <meta name="citation_publication_date" content="2026">
+    <meta name="citation_pdf_url" content="https://zhang-haichao.github.io/CoSRec/static/files/cosrec-iconip-2026.pdf">
+
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="CoSRec at ICONIP 2026">
+    <meta property="og:title" content="Explaining Graph Recommendations via Counterfactual Support Sets">
+    <meta
+      property="og:description"
+      content="CoSRec identifies small sets of historical interactions whose removal changes a graph recommendation.">
+    <meta property="og:url" content="https://zhang-haichao.github.io/CoSRec/">
+    <meta name="twitter:card" content="summary">
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ScholarlyArticle",
+        "headline": "Explaining Graph Recommendations via Counterfactual Support Sets",
+        "url": "https://zhang-haichao.github.io/CoSRec/",
+        "datePublished": "2026",
+        "inLanguage": "en",
+        "codeRepository": "https://github.com/zhang-haichao/CoSRec",
+        "isPartOf": {
+          "@type": "PublicationEvent",
+          "name": "International Conference on Neural Information Processing (ICONIP), 2026"
+        },
+        "author": [
+          {
+            "@type": "Person",
+            "name": "Haichao Zhang",
+            "affiliation": [
+              {"@type": "Organization", "name": "Xi'an Jiaotong-Liverpool University"},
+              {"@type": "Organization", "name": "University of Liverpool"}
+            ]
+          },
+          {
+            "@type": "Person",
+            "name": "Chong Zhang",
+            "affiliation": [
+              {"@type": "Organization", "name": "Xi'an Jiaotong-Liverpool University"},
+              {"@type": "Organization", "name": "University of Liverpool"}
+            ]
+          },
+          {
+            "@type": "Person",
+            "name": "Can Wang",
+            "affiliation": {"@type": "Organization", "name": "Xi'an Jiaotong-Liverpool University"}
+          },
+          {
+            "@type": "Person",
+            "name": "Shi Qiu",
+            "affiliation": {"@type": "Organization", "name": "New York University"}
+          },
+          {
+            "@type": "Person",
+            "name": "Jia Wang",
+            "affiliation": [
+              {"@type": "Organization", "name": "Xi'an Jiaotong-Liverpool University"},
+              {"@type": "Organization", "name": "University of Liverpool"}
+            ]
+          }
+        ],
+        "keywords": [
+          "Counterfactual explanation",
+          "Graph recommendation",
+          "Explainable recommendation"
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+
+    <header class="site-header" data-header>
+      <div class="nav-shell">
+        <a class="brand" href="#top" aria-label="CoSRec home">CoSRec</a>
+
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+          <span></span><span></span><span></span>
+          <span class="sr-only">Open navigation</span>
+        </button>
+
+        <nav class="primary-nav" id="primary-nav" aria-label="Primary navigation">
+          <a href="#abstract" data-nav-link>
+            <span data-lang-label="en">Abstract</span><span data-lang-label="zh" hidden>摘要</span>
+          </a>
+          <a href="#contributions" data-nav-link>
+            <span data-lang-label="en">Contributions</span><span data-lang-label="zh" hidden>贡献</span>
+          </a>
+          <a href="#method" data-nav-link>
+            <span data-lang-label="en">Method</span><span data-lang-label="zh" hidden>方法</span>
+          </a>
+          <a href="#experiments" data-nav-link>
+            <span data-lang-label="en">Experiments</span><span data-lang-label="zh" hidden>实验</span>
+          </a>
+          <a href="#citation" data-nav-link>BibTeX</a>
+          <div class="language-switch" role="group" aria-label="Language">
+            <button type="button" data-language="en" aria-pressed="true">EN</button>
+            <button type="button" data-language="zh" aria-pressed="false">中文</button>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="publication-header" id="top">
+        <div class="content-shell publication-content">
+          <p class="venue">International Conference on Neural Information Processing (ICONIP), 2026 · Melbourne</p>
+          <h1>Explaining Graph Recommendations<br>via Counterfactual Support Sets</h1>
+
+          <div class="authors" role="group" aria-label="Paper authors">
+            <span>Haichao Zhang<sup>1,2</sup></span>
+            <span>Chong Zhang<sup>1,2</sup></span>
+            <span>Can Wang<sup>1</sup></span>
+            <span>Shi Qiu<sup>3</sup></span>
+            <span>Jia Wang<sup>1,2,†</sup></span>
+          </div>
+
+          <div class="affiliations">
+            <p><sup>1</sup> Xi'an Jiaotong-Liverpool University, Suzhou, China</p>
+            <p><sup>2</sup> University of Liverpool, Liverpool, United Kingdom</p>
+            <p><sup>3</sup> New York University, New York, United States of America</p>
+            <p><sup>†</sup> Corresponding author</p>
+          </div>
+
+          <div class="resource-links" role="group" aria-label="Paper resources">
+            <a class="resource-link primary" href="./static/files/cosrec-iconip-2026.pdf" target="_blank" rel="noopener">
+              <span data-lang-label="en">Paper</span><span data-lang-label="zh" hidden>论文</span>
+            </a>
+            <a class="resource-link" href="https://github.com/zhang-haichao/CoSRec" target="_blank" rel="noopener">
+              <span data-lang-label="en">Code</span><span data-lang-label="zh" hidden>代码</span>
+            </a>
+            <a class="resource-link" href="./static/files/cosrec-iconip-2026-slides.pptx" download>
+              <span data-lang-label="en">Slides</span><span data-lang-label="zh" hidden>幻灯片</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="paper-section section-alt" id="abstract">
+        <div class="text-shell">
+          <h2><span data-lang-label="en">Abstract</span><span data-lang-label="zh" hidden>摘要</span></h2>
+          <div data-lang-content="en">
+            <p>
+              Graph-based recommender systems can provide accurate personalized recommendations by learning from
+              user-item interaction records. However, because recommendations involve a large number of historical
+              interactions, it remains difficult to determine which past interactions actually cause an item to
+              appear in the recommendation list. Existing explainable recommendation methods commonly show similar
+              users, related items, important neighbors, attention paths, or influential interactions, but they do
+              not directly answer whether the recommendation would change if this evidence were removed.
+            </p>
+            <p>
+              We propose CoSRec, a post-hoc method that explains graph recommendations by finding a small set of
+              historical interactions whose removal changes the recommendation. CoSRec keeps the trained recommender
+              fixed, learns which interactions of the target user should be retained or weakened, and promotes
+              reasonable alternatives while removing as few interactions as possible. The selected interactions are
+              returned as a support-set explanation and verified by recomputing the recommendation after deletion.
+              Experiments with LightGCN on MovieLens show that CoSRec changes target recommendations with sparse edge
+              removals while preserving most of the surrounding recommendation list. In the all-user comparison,
+              CoSRec reaches Success@1 of 13.47% and 22.16% under 5% and 10% sparsity budgets.
+            </p>
+          </div>
+          <div data-lang-content="zh" hidden>
+            <p>
+              图推荐系统通过学习用户与物品的交互记录生成个性化推荐。然而，一次推荐通常涉及大量历史交互，
+              因此仍然难以判断究竟哪些历史行为真正促使某个物品进入推荐列表。现有可解释推荐方法通常展示相似用户、
+              相关物品、重要邻居、注意力路径或高影响交互，但它们没有直接回答一个关键问题：如果移除这些证据，
+              推荐结果是否会改变？
+            </p>
+            <p>
+              我们提出 CoSRec，一种后验图推荐解释方法，用于寻找一小组历史交互，使其被移除后推荐结果发生改变。
+              CoSRec 保持训练好的推荐模型不变，只学习目标用户的哪些交互应被保留或削弱，并在尽量少移除交互的同时，
+              推动合理候选物品替换原始推荐。最终选出的交互构成支持集解释，并通过实际删除交互、重新计算推荐来验证。
+              在 MovieLens 数据集与 LightGCN 上的实验表明，CoSRec 能通过稀疏边移除改变目标推荐，同时保留大部分原始
+              推荐列表。在全用户比较中，5% 与 10% 稀疏预算下的 Success@1 分别达到 13.47% 和 22.16%。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="paper-section" id="contributions">
+        <div class="text-shell">
+          <h2><span data-lang-label="en">Key Contributions</span><span data-lang-label="zh" hidden>主要贡献</span></h2>
+          <ul class="contribution-list" data-lang-content="en">
+            <li>
+              <strong>A testable explanation task.</strong> CoSRec defines an explanation as a compact subset of a
+              user's history whose removal changes the target recommendation, moving beyond evidence that is merely
+              correlated with the output.
+            </li>
+            <li>
+              <strong>A post-hoc, user-local explainer.</strong> The method learns one retention value for each
+              interaction in the target user's history while keeping the graph recommender and all model parameters
+              fixed.
+            </li>
+            <li>
+              <strong>Ranking-aware sparse search with verification.</strong> A counterfactual ranking objective
+              promotes near-boundary candidates, a sparsity term limits removals, and discrete deletion verifies that
+              the returned support set actually changes the top-K result.
+            </li>
+            <li>
+              <strong>Evaluation across validity and specificity.</strong> Experiments on MovieLens 100K and 1M
+              measure both replacement success and preservation of the surrounding recommendation list, including an
+              all-user comparison against four edge-removal baselines.
+            </li>
+          </ul>
+          <ul class="contribution-list" data-lang-content="zh" hidden>
+            <li>
+              <strong>可检验的解释任务。</strong> CoSRec 将解释定义为用户历史中的一个紧凑子集：移除该子集后，
+              目标推荐必须发生改变，从而超越仅与输出相关的证据。
+            </li>
+            <li>
+              <strong>后验、用户局部的解释器。</strong> 方法只为目标用户的每条历史交互学习一个保留值，
+              图推荐模型及其全部参数始终保持冻结。
+            </li>
+            <li>
+              <strong>面向排序的稀疏搜索与验证。</strong> 反事实排序目标推动临界候选物品替换原始推荐，
+              稀疏项限制移除数量，最后通过真实删边验证支持集是否确实改变 top-K 结果。
+            </li>
+            <li>
+              <strong>同时评估有效性与特异性。</strong> 在 MovieLens 100K 与 1M 上同时测量目标替换成功率和
+              周边推荐列表的保留程度，并在全用户设置下与四种删边基线比较。
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="paper-section section-alt" id="motivation">
+        <div class="content-shell">
+          <div class="text-shell text-block">
+            <h2><span data-lang-label="en">Motivation</span><span data-lang-label="zh" hidden>研究动机</span></h2>
+            <div data-lang-content="en">
+              <p>
+                Relevance-based explanations can identify interactions that look important, yet a lower score does
+                not necessarily alter a ranking. A counterfactual explanation instead tests model dependence: remove
+                a small subset of the user's history, run the same trained recommender again, and accept the subset as
+                an explanation only when the target recommendation is replaced.
+              </p>
+            </div>
+            <div data-lang-content="zh" hidden>
+              <p>
+                基于相关性的解释可以指出看起来重要的交互，但分数下降并不一定改变排序。反事实解释直接检验模型依赖：
+                从用户历史中移除一个小子集，使用同一个训练好的推荐模型重新计算；只有当目标推荐被替换时，
+                该子集才被接受为解释。
+              </p>
+            </div>
+          </div>
+          <figure class="paper-figure figure-medium">
+            <a href="./static/figures/motivation.pdf" target="_blank" rel="noopener">
+              <img
+                src="./static/figures/motivation.png"
+                width="1500"
+                height="808"
+                loading="lazy"
+                decoding="async"
+                alt="Counterfactual explanation workflow: remove a small history subset, recompute with the same recommender, and return the subset when the target item is replaced.">
+            </a>
+            <figcaption>
+              <span data-lang-content="en">
+                Counterfactual explanation for recommendation. The removed interactions are returned as the
+                explanation only when recomputation with the same trained model replaces the original target item.
+              </span>
+              <span data-lang-content="zh" hidden>
+                推荐的反事实解释。只有当同一训练模型重新计算后替换了原始目标物品时，被移除的历史交互才作为解释返回。
+              </span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="paper-section" id="method">
+        <div class="content-shell">
+          <div class="text-shell text-block">
+            <h2><span data-lang-label="en">Method</span><span data-lang-label="zh" hidden>方法</span></h2>
+            <div data-lang-content="en">
+              <p>
+                CoSRec learns a user-local retention mask over the target user's observed interactions. The weighted
+                graph passes through the same frozen recommender, so gradients update only the mask. A pairwise
+                ranking objective encourages near-boundary candidate items to outrank the factual top-K items, while
+                a sparsity penalty retains as much history as possible. Low-retention interactions form the support
+                set, which is then deleted from the graph for discrete verification.
+              </p>
+            </div>
+            <div data-lang-content="zh" hidden>
+              <p>
+                CoSRec 在目标用户的已观测交互上学习一个局部保留掩码。加权后的图仍由同一个冻结推荐模型处理，
+                因而梯度只更新掩码。成对排序目标推动接近排序边界的候选物品超过原始 top-K 物品，
+                稀疏惩罚则尽量保留用户历史。低保留值交互组成支持集，随后从图中真实删除并进行离散验证。
+              </p>
+            </div>
+          </div>
+          <figure class="paper-figure figure-wide">
+            <a href="./static/figures/framework.pdf" target="_blank" rel="noopener">
+              <img
+                src="./static/figures/framework.png"
+                width="2494"
+                height="1711"
+                loading="lazy"
+                decoding="async"
+                alt="CoSRec framework with user-local perturbation, frozen graph recommendation, ranking and sparsity objectives, and support-set verification.">
+            </a>
+            <figcaption>
+              <span data-lang-content="en">
+                CoSRec overview. A local retention mask perturbs only the target user's history. The frozen
+                recommender evaluates factual and perturbed graphs; ranking and sparsity losses optimize the mask;
+                thresholded interactions are deleted and the top-K change is verified.
+              </span>
+              <span data-lang-content="zh" hidden>
+                CoSRec 总览。局部保留掩码只扰动目标用户的历史；冻结推荐模型分别计算原图和扰动图；
+                排序与稀疏损失共同优化掩码；阈值筛选出的交互被真实删除，并验证 top-K 是否改变。
+              </span>
+            </figcaption>
+          </figure>
+
+          <div class="method-details">
+            <section>
+              <h3>
+                <span data-lang-label="en">1. User-local retention mask</span>
+                <span data-lang-label="zh" hidden>1. 用户局部保留掩码</span>
+              </h3>
+              <p data-lang-content="en">
+                Each edge in the target user's history receives a retention value between 0 and 1. Other users'
+                edges remain unchanged, so the intervention stays local to the recommendation being explained.
+              </p>
+              <p data-lang-content="zh" hidden>
+                目标用户历史中的每条边获得一个 0 到 1 之间的保留值，其他用户的边保持不变，
+                因而干预仅作用于当前需要解释的推荐。
+              </p>
+            </section>
+            <section>
+              <h3>
+                <span data-lang-label="en">2. Frozen recommender and graph-dependent scores</span>
+                <span data-lang-label="zh" hidden>2. 冻结推荐模型与图依赖分数</span>
+              </h3>
+              <p data-lang-content="en">
+                CoSRec uses the same learned parameters for the original and weighted graphs. Graph propagation and
+                item scores are recomputed after each mask update, while recommender parameters never change.
+              </p>
+              <p data-lang-content="zh" hidden>
+                原图与加权图共享同一组已学习参数。每次掩码更新后都重新执行图传播并计算物品分数，
+                但推荐模型参数始终不变。
+              </p>
+            </section>
+            <section>
+              <h3>
+                <span data-lang-label="en">3. Ranking and sparsity objectives</span>
+                <span data-lang-label="zh" hidden>3. 排序目标与稀疏目标</span>
+              </h3>
+              <p data-lang-content="en">
+                The ranking loss compares factual top-K items with high-scoring unobserved candidates near the
+                ranking boundary. The total objective combines this loss with a sparsity penalty on edge removal:
+                <span class="math-inline">L = L<sub>rank</sub> + λL<sub>sparse</sub></span>.
+              </p>
+              <p data-lang-content="zh" hidden>
+                排序损失比较原始 top-K 物品与排序边界附近的高分未观测候选物品。总目标将该损失与删边稀疏惩罚结合：
+                <span class="math-inline">L = L<sub>rank</sub> + λL<sub>sparse</sub></span>。
+              </p>
+            </section>
+            <section>
+              <h3>
+                <span data-lang-label="en">4. Support-set extraction and verification</span>
+                <span data-lang-label="zh" hidden>4. 支持集提取与验证</span>
+              </h3>
+              <p data-lang-content="en">
+                Interactions below the retention threshold form the support set, with contribution weight
+                <span class="math-inline">1 − p<sub>ui</sub></span>. CoSRec deletes these edges, recomputes the
+                recommendation, and returns the explanation only after the target top-K result changes.
+              </p>
+              <p data-lang-content="zh" hidden>
+                保留值低于阈值的交互组成支持集，其贡献权重为
+                <span class="math-inline">1 − p<sub>ui</sub></span>。CoSRec 删除这些边并重新计算推荐，
+                仅在目标 top-K 结果确实改变后返回解释。
+              </p>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="paper-section section-alt" id="experiments">
+        <div class="content-shell">
+          <div class="text-shell text-block">
+            <h2><span data-lang-label="en">Experiments</span><span data-lang-label="zh" hidden>实验</span></h2>
+            <div data-lang-content="en">
+              <p>
+                Experiments use MovieLens 100K (943 users, 1,682 items, 100,000 interactions) and MovieLens 1M
+                (6,040 users, 3,900 items, 1,000,000 interactions). Ratings are binarized and split 80/20 for
+                training and testing. CoSRec operates on a frozen LightGCN backbone and is compared with Random,
+                High-Degree, Attention-proxy, and FIA edge-removal baselines.
+              </p>
+              <p>
+                Success Rate measures whether the target recommendation changes. Stability@10 measures overlap
+                between the original and perturbed top-10 lists, capturing whether the intervention remains specific
+                to the target instead of broadly disrupting the ranking.
+              </p>
+            </div>
+            <div data-lang-content="zh" hidden>
+              <p>
+                实验使用 MovieLens 100K（943 位用户、1,682 个物品、100,000 条交互）和 MovieLens 1M
+                （6,040 位用户、3,900 个物品、1,000,000 条交互）。评分被二值化，并按 80/20 划分训练集与测试集。
+                CoSRec 在冻结的 LightGCN 主干上运行，与 Random、High-Degree、Attention-proxy 和 FIA 四种删边基线比较。
+              </p>
+              <p>
+                Success Rate 衡量目标推荐是否改变；Stability@10 衡量干预前后 top-10 列表的重合度，
+                用于判断干预是否聚焦于目标物品，而非大范围扰乱整个排序。
+              </p>
+            </div>
+
+            <ul class="result-notes" data-lang-content="en">
+              <li><strong>Sampled target cases:</strong> a 5% budget replaces the Top-1 item in 83.53% of ML-100K cases and 81.03% of ML-1M cases.</li>
+              <li><strong>All-user comparison:</strong> CoSRec reaches 13.47% and 22.16% Success@1 at 5% and 10% budgets across all 943 ML-100K users.</li>
+              <li><strong>User-level verification:</strong> case studies identify concrete historical interactions whose deletion changes the target item while preserving nearby ranks.</li>
+              <li><strong>Sparsity control:</strong> increasing λ reduces average removals from 6.50 to 0.40 and raises Stability@10 from 0.923 to 0.996, with lower Success@1.</li>
+            </ul>
+            <ul class="result-notes" data-lang-content="zh" hidden>
+              <li><strong>采样目标案例：</strong>5% 预算下，ML-100K 与 ML-1M 的 Top-1 替换率分别为 83.53% 和 81.03%。</li>
+              <li><strong>全用户比较：</strong>在全部 943 位 ML-100K 用户上，5% 与 10% 预算下的 Success@1 分别达到 13.47% 和 22.16%。</li>
+              <li><strong>用户级验证：</strong>案例研究给出可核验的具体历史交互，删除后目标物品改变，而附近名次保持稳定。</li>
+              <li><strong>稀疏性控制：</strong>随着 λ 增大，平均删边数从 6.50 降至 0.40，Stability@10 从 0.923 升至 0.996，同时 Success@1 下降。</li>
+            </ul>
+          </div>
+
+          <section class="experiment-block">
+            <h3>
+              <span data-lang-label="en">Validity and specificity on sampled targets</span>
+              <span data-lang-label="zh" hidden>采样目标上的有效性与特异性</span>
+            </h3>
+            <p data-lang-content="en">
+              On susceptible targets with near-boundary alternatives, a 5% edge-removal budget replaces the
+              original Top-1 item in 83.53% of ML-100K cases and 81.03% of ML-1M cases. At a 20% budget, replacement
+              reaches 87.72% and 86.45%, while Stability@10 remains above 90% on both datasets.
+            </p>
+            <p data-lang-content="zh" hidden>
+              在具有临界候选物品的易变化目标上，5% 删边预算可使 ML-100K 与 ML-1M 中 83.53% 和 81.03% 的
+              原始 Top-1 物品被替换。预算增至 20% 时，替换率达到 87.72% 和 86.45%，两套数据的 Stability@10
+              仍高于 90%。
+            </p>
+            <figure class="paper-figure figure-full">
+              <a href="./static/figures/rq1-tradeoff.pdf" target="_blank" rel="noopener">
+                <img
+                  src="./static/figures/rq1-tradeoff.png"
+                  width="2018"
+                  height="770"
+                  loading="lazy"
+                  decoding="async"
+                  alt="Target replacement and top-10 stability across 5 to 20 percent sparsity budgets on MovieLens 100K and MovieLens 1M.">
+              </a>
+              <figcaption>
+                <span data-lang-content="en">
+                  RQ1. Target replacement rises with the sparsity budget, while the surrounding top-10 list remains
+                  largely stable. These rates apply to sampled susceptible targets, not the all-user evaluation.
+                </span>
+                <span data-lang-content="zh" hidden>
+                  RQ1。随着稀疏预算增加，目标替换率提高，而周边 top-10 列表整体保持稳定。
+                  这些数值来自采样的易变化目标，不代表全用户评估。
+                </span>
+              </figcaption>
+            </figure>
+          </section>
+
+          <section class="experiment-block">
+            <h3>
+              <span data-lang-label="en">All-user counterfactual comparison</span>
+              <span data-lang-label="zh" hidden>全用户反事实比较</span>
+            </h3>
+            <p data-lang-content="en">
+              The stricter RQ2 setting evaluates all 943 ML-100K users with equal edge-removal budgets. CoSRec has the
+              highest Success@1 at both budgets. At 10%, it reaches 22.16%, 9.96 percentage points above FIA, while
+              retaining 93.15% top-10 overlap.
+            </p>
+            <p data-lang-content="zh" hidden>
+              更严格的 RQ2 设置在相同删边预算下评估全部 943 位 ML-100K 用户。CoSRec 在两种预算下均取得最高
+              Success@1；10% 预算下达到 22.16%，比 FIA 高 9.96 个百分点，同时保留 93.15% 的 top-10 重合度。
+            </p>
+
+            <div class="table-scroll" role="region" aria-label="All-user comparison table" tabindex="0">
+              <table class="result-table">
+                <caption>
+                  <span data-lang-content="en">All 943 MovieLens 100K users; values are percentages.</span>
+                  <span data-lang-content="zh" hidden>全部 943 位 MovieLens 100K 用户；表中数值均为百分比。</span>
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col" rowspan="2">Method</th>
+                    <th scope="colgroup" colspan="2">5% budget</th>
+                    <th scope="colgroup" colspan="2">10% budget</th>
+                  </tr>
+                  <tr>
+                    <th scope="col">Success@1</th>
+                    <th scope="col">Stability@10</th>
+                    <th scope="col">Success@1</th>
+                    <th scope="col">Stability@10</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">Random</th><td>1.48</td><td>98.39</td><td>2.23</td><td>97.65</td></tr>
+                  <tr><th scope="row">High-Degree</th><td>1.59</td><td>98.41</td><td>2.65</td><td>97.26</td></tr>
+                  <tr><th scope="row">Attention-proxy</th><td>5.73</td><td>97.60</td><td>9.86</td><td>95.81</td></tr>
+                  <tr><th scope="row">FIA</th><td>6.89</td><td>96.82</td><td>12.20</td><td>94.52</td></tr>
+                  <tr class="highlight-row"><th scope="row">CoSRec</th><td><strong>13.47</strong></td><td>95.66</td><td><strong>22.16</strong></td><td>93.15</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <figure class="paper-figure figure-full">
+              <a href="./static/figures/rq2-comparison.pdf" target="_blank" rel="noopener">
+                <img
+                  src="./static/figures/rq2-comparison.png"
+                  width="2650"
+                  height="1324"
+                  loading="lazy"
+                  decoding="async"
+                  alt="Success at one for Random, High-Degree, Attention-proxy, FIA, and CoSRec under 5 and 10 percent budgets.">
+              </a>
+              <figcaption>
+                <span data-lang-content="en">
+                  RQ2. CoSRec achieves the highest Success@1 under both edge-removal budgets in the all-user setting.
+                  The table above reports Stability@10 alongside the replacement results.
+                </span>
+                <span data-lang-content="zh" hidden>
+                  RQ2。在全用户设置下，CoSRec 在两种删边预算下均取得最高 Success@1；上表同时给出相应的 Stability@10。
+                </span>
+              </figcaption>
+            </figure>
+          </section>
+
+          <section class="experiment-block">
+            <h3>
+              <span data-lang-label="en">Verifiable user-level explanations</span>
+              <span data-lang-label="zh" hidden>可核验的用户级解释</span>
+            </h3>
+            <p data-lang-content="en">
+              Each case reports an original local ranking window, the removed support interactions with learned
+              weights, and the perturbed window. For users 53, 131, and 338, the target item changes after only three
+              support edges are removed, while nearby ranks remain unchanged.
+            </p>
+            <p data-lang-content="zh" hidden>
+              每个案例同时展示原始局部排序窗口、带学习权重的被移除支持交互，以及干预后的窗口。对用户 53、131 与
+              338，仅移除三条支持边即可改变目标物品，同时附近名次保持不变。
+            </p>
+            <figure class="paper-figure figure-full">
+              <a href="./static/figures/rq3-cases.pdf" target="_blank" rel="noopener">
+                <img
+                  src="./static/figures/rq3-cases.png"
+                  width="1952"
+                  height="1343"
+                  loading="lazy"
+                  decoding="async"
+                  alt="Three MovieLens 100K case studies showing original rankings, removed historical support interactions, and replacement recommendations.">
+              </a>
+              <figcaption>
+                <span data-lang-content="en">
+                  RQ3. Dashed red edges denote removed support interactions; edge thickness represents learned
+                  contribution weight. Orange marks the original target and green marks its replacement.
+                </span>
+                <span data-lang-content="zh" hidden>
+                  RQ3。红色虚线表示被移除的支持交互，线宽表示学习到的贡献权重；橙色标出原始目标，绿色标出替换结果。
+                </span>
+              </figcaption>
+            </figure>
+          </section>
+
+          <section class="experiment-block">
+            <h3>
+              <span data-lang-label="en">Sparsity sensitivity</span>
+              <span data-lang-label="zh" hidden>稀疏性敏感度</span>
+            </h3>
+            <p data-lang-content="en">
+              The sparsity penalty λ controls the intervention strength. Across the tested range, larger λ reduces
+              average removed edges from 6.50 to 0.40 and raises Stability@10 from 0.923 to 0.996, while Success@1
+              falls from 28.0% to 3.0%.
+            </p>
+            <p data-lang-content="zh" hidden>
+              稀疏惩罚 λ 控制干预强度。在测试范围内，增大 λ 会使平均删边数从 6.50 降至 0.40，
+              Stability@10 从 0.923 升至 0.996，同时 Success@1 从 28.0% 降至 3.0%。
+            </p>
+            <figure class="paper-figure figure-full">
+              <a href="./static/figures/rq4-sensitivity.pdf" target="_blank" rel="noopener">
+                <img
+                  src="./static/figures/rq4-sensitivity.png"
+                  width="2092"
+                  height="636"
+                  loading="lazy"
+                  decoding="async"
+                  alt="Success at one, average removed edges, and stability at ten across different values of the sparsity penalty lambda.">
+              </a>
+              <figcaption>
+                <span data-lang-content="en">
+                  RQ4. Smaller λ allows stronger interventions and higher counterfactual success; larger λ yields
+                  sparser explanations and higher list stability.
+                </span>
+                <span data-lang-content="zh" hidden>
+                  RQ4。较小的 λ 允许更强干预并带来更高反事实成功率；较大的 λ 产生更稀疏的解释与更高的列表稳定性。
+                </span>
+              </figcaption>
+            </figure>
+          </section>
+        </div>
+      </section>
+
+      <section class="paper-section" id="citation">
+        <div class="content-shell">
+          <div class="section-title">
+            <h2>BibTeX</h2>
+            <p data-lang-content="en">
+              Provisional citation. Proceedings volume, page numbers, and DOI will be added when the official ICONIP
+              2026 metadata becomes available.
+            </p>
+            <p data-lang-content="zh" hidden>
+              临时引用信息。ICONIP 2026 官方出版信息公布后，将补充卷号、页码与 DOI。
+            </p>
+          </div>
+          <div class="bibtex-panel">
+            <button
+              class="copy-button"
+              type="button"
+              data-copy-bibtex
+              data-en-label="Copy BibTeX"
+              data-zh-label="复制 BibTeX">Copy BibTeX</button>
+            <pre id="bibtex"><code>@inproceedings{zhang2026explaining,
+  title     = {Explaining Graph Recommendations via Counterfactual Support Sets},
+  author    = {Zhang, Haichao and Zhang, Chong and Wang, Can and Qiu, Shi and Wang, Jia},
+  booktitle = {International Conference on Neural Information Processing},
+  year      = {2026},
+  note      = {Provisional entry; proceedings metadata forthcoming}
+}</code></pre>
+            <p class="copy-status" data-copy-status aria-live="polite"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="paper-section section-alt acknowledgements">
+        <div class="text-shell">
+          <div data-lang-content="en">
+            <h2>Acknowledgements</h2>
+            <p>
+              This work was supported by the National Natural Science Foundation of China (Grant No. 72401232), the
+              Natural Science Foundation of the Jiangsu Higher Educational Institution of China (Grant No.
+              23KJB520037), and the XJTLU Research Development Fund (RDF-21-01-053).
+            </p>
+          </div>
+          <div data-lang-content="zh" hidden>
+            <h2>致谢</h2>
+            <p>
+              本工作得到国家自然科学基金（项目编号 72401232）、江苏省高等学校自然科学研究项目
+              （项目编号 23KJB520037）以及西交利物浦大学科研发展基金（RDF-21-01-053）的资助。
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="content-shell">
+        <p><strong>CoSRec</strong> · Explaining Graph Recommendations via Counterfactual Support Sets · ICONIP 2026</p>
+        <p>
+          <span data-lang-content="en">Page structure adapted from the </span>
+          <span data-lang-content="zh" hidden>页面结构参考 </span>
+          <a
+            href="https://github.com/eliahuhorwitz/Academic-project-page-template"
+            target="_blank"
+            rel="noopener">Academic Project Page Template</a>.
+        </p>
+      </div>
+    </footer>
+
+    <script src="./static/js/site.js" defer></script>
+  </body>
+</html>
