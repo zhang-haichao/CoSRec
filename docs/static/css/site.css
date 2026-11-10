@@ -15,7 +15,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 72px;
+  scroll-padding-top: 76px;
 }
 
 body {
@@ -23,8 +23,8 @@ body {
   color: var(--text);
   background: var(--white);
   font-family: var(--sans);
-  font-size: 16px;
-  line-height: 1.72;
+  font-size: 17px;
+  line-height: 1.7;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -91,12 +91,12 @@ select {
 }
 
 .content-shell {
-  width: min(1060px, calc(100% - 40px));
+  width: min(1200px, calc(100% - 48px));
   margin-inline: auto;
 }
 
 .text-shell {
-  width: min(800px, calc(100% - 40px));
+  width: min(900px, calc(100% - 48px));
   margin-inline: auto;
 }
 
@@ -109,8 +109,8 @@ select {
 }
 
 .nav-shell {
-  width: min(1120px, calc(100% - 32px));
-  min-height: 60px;
+  width: min(1280px, calc(100% - 40px));
+  min-height: 64px;
   margin-inline: auto;
   display: flex;
   align-items: center;
@@ -120,7 +120,7 @@ select {
 
 .brand {
   color: #17202a;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-decoration: none;
@@ -133,9 +133,9 @@ select {
 }
 
 .primary-nav > a {
-  padding: 8px 9px;
+  padding: 9px 11px;
   color: #4e5660;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 500;
   text-decoration: none;
 }
@@ -160,7 +160,7 @@ select {
   background: var(--white);
   border: 0;
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: 0.77rem;
 }
 
 .language-switch button + button {
@@ -191,7 +191,7 @@ select {
 }
 
 .publication-header {
-  padding: 82px 0 70px;
+  padding: 68px 0 60px;
   background: var(--light);
   border-bottom: 1px solid var(--border);
 }
@@ -203,29 +203,29 @@ select {
 .venue {
   margin: 0 0 20px;
   color: var(--blue);
-  font-size: 0.84rem;
+  font-size: 0.92rem;
   font-weight: 600;
 }
 
 .publication-header h1 {
-  max-width: 960px;
+  max-width: 1160px;
   margin: 0 auto;
   color: #18212b;
-  font-size: clamp(2.15rem, 5vw, 3.45rem);
+  font-size: clamp(2.4rem, 5.2vw, 4.05rem);
   font-weight: 700;
   letter-spacing: -0.028em;
   line-height: 1.16;
 }
 
 .authors {
-  max-width: 900px;
-  margin: 30px auto 0;
+  max-width: 1040px;
+  margin: 32px auto 0;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 5px 18px;
   color: #26384a;
-  font-size: 1rem;
+  font-size: 1.08rem;
 }
 
 .authors a,
@@ -246,7 +246,7 @@ select {
 .affiliations {
   margin-top: 16px;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.93rem;
   line-height: 1.55;
 }
 
@@ -255,7 +255,7 @@ select {
 }
 
 .resource-links {
-  margin-top: 28px;
+  margin-top: 30px;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -264,16 +264,16 @@ select {
 
 .resource-link {
   display: inline-flex;
-  min-width: 88px;
-  min-height: 40px;
+  min-width: 98px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
-  padding: 8px 17px;
+  padding: 9px 20px;
   color: #28313a;
   background: var(--white);
   border: 1px solid #bfc6ce;
   border-radius: 5px;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -290,7 +290,7 @@ select {
 }
 
 .paper-section {
-  padding: 78px 0;
+  padding: 68px 0;
 }
 
 .section-alt {
@@ -302,7 +302,7 @@ select {
 .paper-section h2 {
   margin: 0 0 28px;
   color: #1d2731;
-  font-size: clamp(1.75rem, 3vw, 2.2rem);
+  font-size: clamp(1.95rem, 3vw, 2.45rem);
   font-weight: 700;
   line-height: 1.25;
   text-align: center;
@@ -311,7 +311,7 @@ select {
 .paper-section h3 {
   margin: 0 0 14px;
   color: #26313c;
-  font-size: 1.3rem;
+  font-size: 1.38rem;
   font-weight: 600;
   line-height: 1.35;
 }
@@ -327,7 +327,7 @@ select {
 }
 
 .section-title {
-  max-width: 760px;
+  max-width: 860px;
   margin: 0 auto 34px;
   text-align: center;
 }
@@ -377,28 +377,28 @@ select {
 }
 
 .figure-medium {
-  max-width: 780px;
+  max-width: 860px;
 }
 
 .figure-wide {
-  max-width: 1000px;
+  max-width: 1120px;
 }
 
 .figure-full {
-  max-width: 1060px;
+  max-width: 1200px;
 }
 
 figcaption {
-  max-width: 920px;
+  max-width: 1000px;
   margin: 12px auto 0;
   color: #5f6670;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   line-height: 1.55;
   text-align: left;
 }
 
 .method-details {
-  max-width: 800px;
+  max-width: 900px;
   margin: 50px auto 0;
   border-top: 1px solid var(--border);
 }
@@ -420,7 +420,7 @@ figcaption {
 
 .experiment-block > h3,
 .experiment-block > p {
-  max-width: 800px;
+  max-width: 900px;
   margin-right: auto;
   margin-left: auto;
 }
@@ -431,7 +431,7 @@ figcaption {
 }
 
 .table-scroll {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 34px auto 0;
   overflow-x: auto;
   border: 1px solid #d6dbe0;
@@ -442,7 +442,7 @@ figcaption {
   width: 100%;
   min-width: 680px;
   border-collapse: collapse;
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   line-height: 1.45;
   text-align: right;
 }
@@ -514,7 +514,7 @@ figcaption {
 
 .bibtex-panel {
   position: relative;
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
   background: #f3f5f7;
   border: 1px solid #d6dbe0;
@@ -526,7 +526,7 @@ figcaption {
   overflow-x: auto;
   color: #26313c;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   line-height: 1.65;
   white-space: pre;
 }
@@ -562,13 +562,13 @@ figcaption {
 }
 
 .acknowledgements h2 {
-  font-size: 1.45rem;
+  font-size: 1.6rem;
   text-align: left;
 }
 
 .acknowledgements p {
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.92rem;
 }
 
 .site-footer {
@@ -576,7 +576,7 @@ figcaption {
   color: #676f78;
   background: var(--white);
   border-top: 1px solid var(--border);
-  font-size: 0.76rem;
+  font-size: 0.82rem;
   text-align: center;
 }
 
@@ -595,7 +595,7 @@ figcaption {
 
   .primary-nav {
     position: fixed;
-    inset: 60px 14px auto;
+    inset: 64px 14px auto;
     display: grid;
     gap: 2px;
     padding: 10px;
@@ -635,6 +635,29 @@ figcaption {
   }
 }
 
+@media (min-width: 1600px) {
+  body {
+    font-size: 18px;
+  }
+
+  .content-shell {
+    width: min(1280px, calc(100% - 64px));
+  }
+
+  .text-shell {
+    width: min(960px, calc(100% - 64px));
+  }
+
+  .nav-shell {
+    width: min(1360px, calc(100% - 64px));
+  }
+
+  .publication-header h1 {
+    max-width: 1240px;
+    font-size: 4.25rem;
+  }
+}
+
 @media (max-width: 640px) {
   body {
     font-size: 15px;
@@ -642,7 +665,7 @@ figcaption {
 
   .content-shell,
   .text-shell {
-    width: min(100% - 28px, 1060px);
+    width: min(100% - 28px, 1200px);
   }
 
   .publication-header {
